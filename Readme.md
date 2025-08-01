@@ -2,6 +2,8 @@
 
 Ce projet est une application web interactive permettant d'explorer et d'analyser les réseaux de transactions Bitcoin à travers différentes résolutions temporelles. Il s'appuie sur des technologies modernes pour fournir des visualisations dynamiques et des analyses approfondies des données.
 
+[📄 Télécharger le PDF de Présentation](./Projet Bitocin Diapo.pdf)
+
 ## Fonctionnalités
 
 - **Analyse à un Moment Donné** : Explorez la structure du réseau Bitcoin pour une date et une heure spécifiques.
