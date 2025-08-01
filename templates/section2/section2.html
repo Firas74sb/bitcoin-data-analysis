@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Présentation d'images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .section h2 {
+            font-size: 2em;
+            color: #333;
+        }
+        .section p {
+            font-size: 1.1em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Analyse de la journée du 20 octobre 2019</h1>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h2>Transaction Minimal et Maximum (BTC)</h2>
+            <p>Min = 1 et Max = 19014727222527</p>
+        </div>
+
+        <div class="section">
+            <h2>Quelles que s'informations sur les transactions de la journée</h2>
+            <p>Nombres de transactions dans la journée : 575632</p>
+            <p>Nombre d'adresses Sources unique  :  166627</p>
+            <p>Nombre d'addresses Destinataire unique : 222149</p>
+            <p>Val_Satoshi uniques :  322909</p>
+            <p>Val_USD unique :  335819</p>
+        </div>
+        
+        <div class="section">
+          <h2>Le total des transactions</h2>
+          <p>Total sans mineurs (Satoshi) :  74965419710627</p>
+          <p>Total avec mineurs Satoshi :  74967004055431</p>
+          <p>Transacation des mineurs en Satoshi:  1584344804</p>
+        </div>
+        
+        <div class="section">
+          <h2>Top 100</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image1.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Lorenz</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image2.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Top 10</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image3.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Transaction internes</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image4.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Destinataire unique</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image5.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Part</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image6.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Profil</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image7.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Adresse</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image8.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Anormales</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image9.png') }}">
+        </div>
+
+        <div class="section">
+          <h2>Moyenne</h2>
+          <img src="{{ url_for('static', filename='assets/images/section2/image10.png') }}">
+        </div>
+    </div>
+</body>
+</html>

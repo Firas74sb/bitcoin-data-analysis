@@ -1,0 +1,626 @@
+{% extends "section3/base.html" %}
+
+{% block styles %}
+<style>
+    .comparison-dashboard {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .network-container {
+        position: relative;
+        height: 80vh;
+        width: 100%;
+        margin: 2rem 0;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .network-frame {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: all 0.5s ease;
+        border: none;
+    }
+
+    .network-frame.active {
+        opacity: 1;
+        z-index: 1;
+    }
+
+    .network-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .comparison-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .time-selector {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .time-selector h3 {
+        margin-top: 0;
+        color: var(--primary);
+    }
+
+    .input-group {
+        margin-bottom: 1rem;
+    }
+
+    input[type="date"], select {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+    }
+
+    button {
+        background: var(--secondary);
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s;
+    }
+
+    button:hover {
+        background: var(--primary);
+    }
+
+    .visualization-controls {
+        margin-top: -1rem;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-control {
+        width: 100%;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        height: 10px;
+        -webkit-appearance: none;
+        background: #e0e0e0;
+        border-radius: 5px;
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: var(--secondary);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .time-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        color: #7f8c8d;
+    }
+
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .transactions-table th, 
+    .transactions-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .transactions-table th {
+        background-color: #f8f9fa;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .transactions-table tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .table-container {
+        max-height: 500px;
+        overflow-y: auto;
+        margin: 2rem 0;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        display: none;
+    }
+
+    .table-container.active {
+        display: block;
+    }
+
+    .table-search {
+        width: 100%;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 0.5rem;
+    }
+
+    .stats-comparison {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .stats-panel {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .stats-panel h3 {
+        margin-top: 0;
+        color: var(--primary);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .stat-label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        color: var(--secondary);
+    }
+
+    .change-analysis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .change-card, .growth-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .change-card h3, .growth-card h3 {
+        margin-top: 0;
+        color: var(--primary);
+    }
+
+    .explanation {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-top: 0;
+    }
+
+    .change-metrics, .growth-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .metric {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+
+    .metric-explanation {
+        color: #7f8c8d;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .value {
+        font-size: 1.5rem;
+        color: var(--secondary);
+        font-weight: bold;
+    }
+
+    .label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    .common-node {
+        background: #000000 !important;
+        border-color: #000000 !important;
+    }
+
+    .intro-paragraph {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .intro-paragraph p {
+        margin: 0 0 1rem 0;
+    }
+
+    .intro-paragraph ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .intro-paragraph li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comparison-dashboard">
+    <h1>Analyse Comparative</h1>
+    
+    <div class="intro-paragraph">
+        <p>Cet outil comparatif vous permet d’analyser l’évolution du réseau de transactions Bitcoin au fil du temps. En sélectionnant deux points temporels distincts, vous pouvez examiner les changements dans la structure du réseau, l’activité des participants et les schémas de transactions.</p>
+        
+        <p>Les principales fonctionnalités de l’analyse comparative incluent :</p>
+        <ul>
+            <li><strong>Suivi de l’évolution du réseau :</strong> Visualisez comment le réseau change entre deux points temporels, avec les nouveaux nœuds en orange et les nœuds disparus en rouge.</li>
+            <li><strong>Frise chronologique interactive :</strong> Passez facilement d’un point temporel à l’autre grâce au curseur pour observer les modifications dans la structure du réseau.</li>
+            <li><strong>Comparaison quantitative :</strong> Affichez côte à côte les statistiques des deux périodes, incluant les variations du nombre total de nœuds, de transactions et des flux de valeur.</li>
+            <li><strong>Métriques de changement :</strong> Découvrez précisément combien de nœuds et de transactions ont été ajoutés ou supprimés entre les deux points temporels.</li>
+            <li><strong>Analyse détaillée des transactions :</strong> Comparez les tableaux de transactions des deux périodes afin d’identifier les évolutions des schémas d’activité.</li>
+        </ul>
+        
+        <p>Pour commencer, sélectionnez deux dates et heures différentes ci-dessous afin de les comparer. La visualisation affichera les deux réseaux et mettra en évidence les différences entre eux.</p>        
+    </div>
+    
+    <form method="POST">
+        <div class="comparison-controls">
+            <div class="time-selector">
+                <h3>Premier Point Temporel</h3>
+                <div class="input-group">
+                    <input type="date" id="date1" name="date1" 
+                           min="{{ min_date }}" 
+                           max="{{ max_date }}"
+                           value="{{ selected_dates[0] }}" required>
+                </div>
+                <div class="input-group">
+                    <select id="hour1" name="hour1" required disabled>
+                        <option value="" disabled selected>Sélectionnez d'abord la date</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="time-selector">
+                <h3>Second Point Temporel</h3>
+                <div class="input-group">
+                    <input type="date" id="date2" name="date2" 
+                           min="{{ min_date }}" 
+                           max="{{ max_date }}"
+                           value="{{ selected_dates[1] }}" required>
+                </div>
+                <div class="input-group">
+                    <select id="hour2" name="hour2" required disabled>
+                        <option value="" disabled selected>Sélectionnez d'abord la date</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <button type="submit">Comparer les Réseaux</button>
+    </form>
+
+    {% if comparison_data %}
+    <div class="network-container">
+        {% for data in comparison_data %}
+        <div class="network-frame{% if loop.first %} active{% endif %}" id="network-{{ loop.index }}">
+            <iframe src="{{ url_for('serve_network', filename=data.network_file) }}"></iframe>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="visualization-controls">
+        <div class="timeline-control">
+            <input type="range" min="0" max="100" value="0" id="timeline"
+                   oninput="updateTransition(this.value)"
+                   onchange="finalizeTransition(this.value)">
+            <div class="time-labels">
+                <span>{{ comparison_data[0].selected_date }} {{ comparison_data[0].selected_hour }}</span>
+                <span>{{ comparison_data[1].selected_date }} {{ comparison_data[1].selected_hour }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-comparison">
+        {% for data in comparison_data %}
+        <div class="stats-panel">
+            <h3>Statistiques du Réseau - {{ data.selected_date }} {{ data.selected_hour }}</h3>
+            
+            <div class="stat-row">
+                <span class="stat-label">Nœuds Totals :</span>
+                <span class="stat-value">{{ "{:,}".format(data.hour_stats.total_nodes) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Transactions Totales :</span>
+                <span class="stat-value">{{ "{:,}".format(data.hour_stats.total_transactions) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Transaction Moyenne (SAT) :</span>
+                <span class="stat-value">{{ "{:,.0f}".format(data.hour_stats.avg_satoshi) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Transaction Max (SAT) :</span>
+                <span class="stat-value">{{ "{:,.0f}".format(data.graph_stats.max_satoshi) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Transaction Min (SAT) :</span>
+                <span class="stat-value">{{ "{:,.0f}".format(data.graph_stats.min_satoshi) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Valeur Totale (SAT) :</span>
+                <span class="stat-value">{{ "{:,.0f}".format(data.hour_stats.total_satoshi) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Valeur Moyenne (USD) :</span>
+                <span class="stat-value">${{ "%.2f" % data.hour_stats.avg_usd }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Nœuds Affichés :</span>
+                <span class="stat-value">{{ "{:,}".format(data.graph_stats.shown_nodes) }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Transactions Affichées :</span>
+                <span class="stat-value">{{ "{:,}".format(data.graph_stats.shown_transactions) }}</span>
+            </div>            
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="change-analysis">
+        {% if change_data %}
+        <div class="change-card">
+            <h3>Changements du Réseau</h3>
+            <p class="explanation">Affiche comment le réseau a évolué entre les deux points temporels :</p>
+            <div class="change-metrics">
+                <div class="metric">
+                    <div class="value">{{ change_data.new_nodes|length }}</div>
+                    <div class="label">Nouveaux Nœuds</div>
+                    <p class="metric-explanation">Nœuds apparus au second point temporel (orange)</p>
+                </div>
+                <div class="metric">
+                    <div class="value">{{ change_data.disappeared_nodes|length }}</div>
+                    <div class="label">Nœuds Disparus</div>
+                    <p class="metric-explanation">Nœuds présents au premier point mais pas au second (rouge)</p>
+                </div>
+                <div class="metric">
+                    <div class="value">{{ change_data.common_nodes|length }}</div>
+                    <div class="label">Nœuds Communs</div>
+                    <p class="metric-explanation">Nœuds présents dans les deux points temporels (noir)</p>
+                </div>
+            </div>
+        </div>        
+        {% endif %}
+
+        {% if growth_metrics %}
+        <div class="growth-card">
+            <h3>Métriques de Croissance</h3>
+            <p class="explanation">Quantifie l'expansion du réseau entre les points temporels :</p>
+            <div class="growth-metrics">
+                <div class="metric">
+                    <div class="value">{{ growth_metrics.node_growth }}</div>
+                    <div class="label">Croissance des Nœuds</div>
+                    <p class="metric-explanation">Nouveaux nœuds moins les nœuds disparus</p>
+                </div>
+                <div class="metric">
+                    <div class="value">{{ growth_metrics.edge_growth }}</div>
+                    <div class="label">Croissance des Liens</div>
+                    <p class="metric-explanation">Nouvelles transactions moins celles disparues</p>
+                </div>
+                <div class="metric">
+                    <div class="value">{{ growth_metrics.value_growth|format_satoshi }}</div>
+                    <div class="label">Croissance de la Valeur (SAT)</div>
+                    <p class="metric-explanation">Changement dans la valeur totale des transactions</p>
+                </div>
+            </div>
+        </div>        
+        {% endif %}
+    </div>
+
+    {% for data in comparison_data %}
+    <div class="table-container" id="table-{{ loop.index }}" {% if not loop.first %}style="display:none"{% endif %}>
+        <h3>Transactions des Nœuds - {{ data.selected_date }} {{ data.selected_hour }}</h3>
+        <input type="text" class="table-search" placeholder="Search transactions..." onkeyup="searchTable({{ loop.index }}, this.value)">
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Node ID</th>
+                    <th>Counterparty</th>
+                    <th>Value (SAT)</th>
+                    <th>Value (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in data.graph_stats.node_transactions %}
+                <tr>
+                    <td>{{ tx.node }}</td>
+                    <td>{{ tx.counterparty }}</td>
+                    <td>{{ tx.VALUE_SATOSHI|format_satoshi }}</td>
+                    <td>{{ tx.VALUE_USD|format_usd }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+let isAnimating = false;
+let frames = [];
+
+function updateTransition(value) {
+    if (!isAnimating) {
+        isAnimating = true;
+        const ratio = value / 100;
+        
+        frames[0].style.opacity = 1 - ratio;
+        frames[0].style.transform = `scale(${1 - (ratio * 0.02)})`;
+        frames[1].style.opacity = ratio;
+        frames[1].style.transform = `scale(${0.98 + (ratio * 0.02)})`;
+        
+        requestAnimationFrame(() => {
+            isAnimating = false;
+        });
+    }
+}
+
+function finalizeTransition(value) {
+    const targetFrame = value > 50 ? 1 : 0;
+    frames.forEach((frame, index) => {
+        frame.classList.toggle('active', index === targetFrame);
+    });
+    
+    document.querySelectorAll('.table-container').forEach((table, index) => {
+        table.style.display = index === targetFrame ? 'block' : 'none';
+    });
+}
+
+function searchTable(tableIndex, query) {
+    const table = document.querySelector(`#table-${tableIndex} table`);
+    const rows = table.querySelectorAll('tbody tr');
+    query = query.toLowerCase();
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    
+    dateInputs.forEach(input => {
+        input.addEventListener('change', async function() {
+            const date = this.value;
+            const hourSelect = this.closest('.time-selector').querySelector('select');
+            
+            if (!date) {
+                hourSelect.innerHTML = '<option value="" disabled selected>Select date first</option>';
+                hourSelect.disabled = true;
+                return;
+            }
+
+            hourSelect.innerHTML = '<option value="" disabled>Loading hours...</option>';
+            hourSelect.disabled = true;
+
+            try {
+                const response = await fetch(`/get-hours/${date}`);
+                if (!response.ok) throw new Error(await response.text());
+                
+                const data = await response.json();
+                
+                if (data.available_hours && data.available_hours.length > 0) {
+                    hourSelect.innerHTML = `
+                        <option value="" disabled selected>Select hour</option>
+                        ${data.available_hours.map(h => 
+                            `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`
+                        ).join('')}
+                    `;
+                    hourSelect.disabled = false;
+                } else {
+                    hourSelect.innerHTML = '<option value="" disabled>No data available</option>';
+                }
+                
+            } catch (error) {
+                hourSelect.innerHTML = '<option value="" disabled>Error loading hours</option>';
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    frames = document.querySelectorAll('.network-frame');
+    if (frames.length > 0) {
+        document.getElementById('table-1').style.display = 'block';
+    }
+
+    {% if selected_dates[0] %}
+    document.getElementById('date1').value = '{{ selected_dates[0] }}';
+    fetch(`/get-hours/{{ selected_dates[0] }}`)
+        .then(response => response.json())
+        .then(data => {
+            const hourSelect = document.getElementById('hour1');
+            hourSelect.innerHTML = `
+                <option value="" disabled selected>Select hour</option>
+                ${data.available_hours.map(h => 
+                    `<option value="${h}" ${h == {{ selected_hours[0]|int }} ? 'selected' : ''}>
+                        ${String(h).padStart(2, '0')}:00
+                    </option>`
+                ).join('')}
+            `;
+            hourSelect.disabled = false;
+        });
+    {% endif %}
+
+    {% if selected_dates[1] %}
+    document.getElementById('date2').value = '{{ selected_dates[1] }}';
+    fetch(`/get-hours/{{ selected_dates[1] }}`)
+        .then(response => response.json())
+        .then(data => {
+            const hourSelect = document.getElementById('hour2');
+            hourSelect.innerHTML = `
+                <option value="" disabled selected>Select hour</option>
+                ${data.available_hours.map(h => 
+                    `<option value="${h}" ${h == {{ selected_hours[1]|int }} ? 'selected' : ''}>
+                        ${String(h).padStart(2, '0')}:00
+                    </option>`
+                ).join('')}
+            `;
+            hourSelect.disabled = false;
+        });
+    {% endif %}
+});
+</script>
+{% endblock %}

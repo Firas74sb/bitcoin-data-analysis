@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network</title>
+    <script type="text/javascript" src="{{ url_for('serve_pyvis_static', filename='vis-network.min.js') }}"></script>
+    <style type="text/css">
+        #mynetwork {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #f8f9fa;
+        }
+        
+        .search-result-node {
+            border: 3px solid #ff5722 !important;
+            box-shadow: 0 0 10px #ff5722;
+        }
+        
+        .community-node {
+            border: 2px solid #3f51b5 !important;
+        }
+    </style>
+</head>
+<body>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+    // Global variables
+    var edges;
+    var nodes;
+    var network;
+    var originalNodes = [];
+    var originalEdges = [];
+    var currentHighlight = null;
+
+    // Initialize network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        // Parse the serialized network data
+        nodes = new vis.DataSet({{ nodes | safe }});
+        edges = new vis.DataSet({{ edges | safe }});
+        
+        // Store original state
+        originalNodes = nodes.get().map(node => ({...node}));
+        originalEdges = edges.get().map(edge => ({...edge}));
+        
+        // Create the network
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        
+        var options = {{ options | safe }};
+        
+        // Enhanced physics for better layout
+        options.physics = {
+            enabled: true,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+                gravitationalConstant: -100,
+                centralGravity: 0.01,
+                springLength: 100,
+                springConstant: 0.08,
+                damping: 0.4,
+                avoidOverlap: 0.5
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 1000,
+                updateInterval: 25
+            }
+        };
+        
+        options.nodes = {
+            borderWidth: 2,
+            shadow: {
+                enabled: true,
+                color: 'rgba(0,0,0,0.5)',
+                size: 10,
+                x: 5,
+                y: 5
+            },
+            font: {
+                size: 12,
+                face: 'Tahoma',
+                strokeWidth: 5,
+                strokeColor: '#ffffff'
+            }
+        };
+        
+        options.edges = {
+            smooth: {
+                type: 'continuous',
+                roundness: 0.5
+            },
+            arrows: {
+                to: {
+                    enabled: true,
+                    scaleFactor: 0.5
+                }
+            },
+            color: {
+                inherit: 'from'
+            },
+            width: 2
+        };
+        
+        network = new vis.Network(container, data, options);
+        
+        // Handle search messages from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'search') {
+                if (event.data.nodeId !== undefined) {
+                    focusNode(event.data.nodeId);
+                } else if (event.data.communityId !== undefined) {
+                    focusCommunity(event.data.communityId);
+                }
+            }
+            else if (event.data.type === 'reset') {
+                resetView();
+            }
+        });
+        
+        // Double click to reset view
+        network.on("doubleClick", function(params) {
+            if (params.nodes.length === 0) {
+                resetView();
+            }
+        });
+        
+        // Stabilization progress bar
+        network.on("stabilizationProgress", function(params) {
+            var progress = params.iterations/params.total;
+            console.log("Stabilizing: " + Math.round(progress*100) + "%");
+        });
+        
+        network.on("stabilizationIterationsDone", function() {
+            console.log("Stabilization complete");
+        });
+    }
+
+    // Focus on specific node
+    function focusNode(nodeId) {
+        // Reset previous highlights
+        if (currentHighlight) {
+            resetView();
+        }
+        
+        // Find connected nodes
+        var connectedNodes = new Set();
+        var connectedEdges = [];
+        
+        edges.get().forEach(edge => {
+            if (edge.from == nodeId || edge.to == nodeId) {
+                connectedNodes.add(edge.from);
+                connectedNodes.add(edge.to);
+                connectedEdges.push(edge.id);
+            }
+        });
+        
+        // Update nodes
+        var updatedNodes = nodes.get().map(node => {
+            var isConnected = connectedNodes.has(node.id);
+            var isTarget = node.id == nodeId;
+            
+            return {
+                id: node.id,
+                hidden: !isConnected && !isTarget,
+                color: {
+                    background: isConnected ? node.color.background : '#eeeeee',
+                    border: isConnected ? node.color.border : '#cccccc',
+                    highlight: {
+                        background: isTarget ? '#ff5722' : (isConnected ? node.color.highlight.background : '#dddddd'),
+                        border: isTarget ? '#e64a19' : (isConnected ? node.color.highlight.border : '#bbbbbb')
+                    }
+                },
+                size: isTarget ? 25 : (isConnected ? 15 : 10),
+                font: {
+                    size: isTarget ? 16 : (isConnected ? 14 : 12)
+                },
+                shadow: {
+                    enabled: isConnected
+                }
+            };
+        });
+        
+        // Highlight the target node
+        updatedNodes.push({
+            id: nodeId,
+            color: {
+                background: '#ff5722',
+                border: '#e64a19',
+                highlight: {
+                    background: '#ff5722',
+                    border: '#e64a19'
+                }
+            },
+            size: 30,
+            font: {
+                size: 16,
+                color: '#ffffff'
+            },
+            shadow: {
+                enabled: true,
+                color: 'rgba(255,87,34,0.8)',
+                size: 15
+            }
+        });
+        
+        nodes.update(updatedNodes);
+        
+        // Update edges
+        var updatedEdges = edges.get().map(edge => {
+            return {
+                id: edge.id,
+                hidden: !connectedEdges.includes(edge.id),
+                width: connectedEdges.includes(edge.id) ? 3 : 0,
+                color: {
+                    color: connectedEdges.includes(edge.id) ? edge.color.color : '#eeeeee',
+                    highlight: connectedEdges.includes(edge.id) ? '#ff5722' : '#eeeeee',
+                    opacity: connectedEdges.includes(edge.id) ? 1 : 0
+                }
+            };
+        });
+        
+        edges.update(updatedEdges);
+        
+        // Center and zoom on the node
+        network.focus(nodeId, {
+            scale: 0.8,
+            animation: {
+                duration: 1000,
+                easingFunction: 'easeInOutQuad'
+            }
+        });
+        
+        currentHighlight = { type: 'node', id: nodeId };
+    }
+
+    // Focus on community
+    function focusCommunity(communityId) {
+        // Reset previous highlights
+        if (currentHighlight) {
+            resetView();
+        }
+        
+        // Find all nodes in community
+        var communityNodes = nodes.get().filter(node => 
+            node.title && node.title.includes(`Community: ${communityId}`));
+        
+        if (communityNodes.length === 0) return;
+        
+        var communityNodeIds = communityNodes.map(node => node.id);
+        
+        // Find edges within community
+        var communityEdges = edges.get().filter(edge =>
+            communityNodeIds.includes(edge.from) && communityNodeIds.includes(edge.to));
+        
+        // Update nodes
+        var updatedNodes = nodes.get().map(node => {
+            var inCommunity = communityNodeIds.includes(node.id);
+            
+            return {
+                id: node.id,
+                hidden: !inCommunity,
+                color: {
+                    background: inCommunity ? node.color.background : '#eeeeee',
+                    border: inCommunity ? '#3f51b5' : '#cccccc',
+                    highlight: {
+                        background: inCommunity ? node.color.highlight.background : '#dddddd',
+                        border: inCommunity ? '#303f9f' : '#bbbbbb'
+                    }
+                },
+                size: inCommunity ? 20 : 10,
+                font: {
+                    size: inCommunity ? 14 : 12
+                },
+                shadow: {
+                    enabled: inCommunity
+                }
+            };
+        });
+        
+        nodes.update(updatedNodes);
+        
+        // Update edges
+        var updatedEdges = edges.get().map(edge => {
+            var inCommunity = communityNodeIds.includes(edge.from) && communityNodeIds.includes(edge.to);
+            
+            return {
+                id: edge.id,
+                hidden: !inCommunity,
+                width: inCommunity ? 3 : 0,
+                color: {
+                    color: inCommunity ? edge.color.color : '#eeeeee',
+                    highlight: inCommunity ? '#3f51b5' : '#eeeeee',
+                    opacity: inCommunity ? 1 : 0
+                }
+            };
+        });
+        
+        edges.update(updatedEdges);
+        
+        // Fit to community
+        network.fit({
+            nodes: communityNodeIds,
+            animation: {
+                duration: 1000,
+                easingFunction: 'easeInOutQuad'
+            }
+        });
+        
+        currentHighlight = { type: 'community', id: communityId };
+    }
+
+    // Reset to original view
+    function resetView() {
+        nodes.update(originalNodes);
+        edges.update(originalEdges);
+        network.fit({
+            animation: {
+                duration: 800,
+                easingFunction: 'easeInOutQuad'
+            }
+        });
+        currentHighlight = null;
+    }
+
+    // Load the data and draw the graph
+    drawGraph();
+</script>
+</body>
+</html>

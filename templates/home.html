@@ -1,0 +1,64 @@
+{% extends "index.html" %}
+
+{% block styles %}
+    {{ super() }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}
+
+{% block nav %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="left-section">
+        <div class="top">
+            <h2>Analyse du jeu de données ORBITAAL</h2>
+            <p>
+                Ce projet s'inscrit dans une thématique d'analyse de données massives (big data) dans le cadre des transactions Bitcoin.
+                Dans le cadre de ce projet, nous travaillons sur la représentations de graphes dans différents types de résolutions.
+            </p>
+        </div>
+    </div>
+
+    <img src="{{ url_for('static', filename='assets/images/chart2.png') }}">
+</div>
+
+<div class="projects">
+    <div class="inner">
+        <h2>A propos du jeu de données Orbitaal</h2>
+        <p class="info">Orbitaal est un dataset détaillé des transactions Bitcoin entre le 3 janvier 2009 et le 25 janvier 2021 dans différentes résolutions.</p>
+
+        <div class="items">
+
+            <div class="item">
+                <a>Orbitaal nodetable</a>
+                <p>
+                    Informations sur les entités :<br>
+                    363 989 340 Elements
+                </p>
+            </div>
+
+            <!-- hour : 1 594 014 666 -->
+            <div class="item">
+                <a href="#">Orbitaal snapshots</a>
+                <p>
+                    Les transactions dans différentes résolutions :<br>
+                    Plus de 1 000 000 000 de transactions
+                </p>
+            </div>
+
+            <div class="item">
+                <a href="#">Orbitaal streamgraph</a>
+                <p>
+                    Les transactions dans différentes résolutions<br>
+                    Plus de 1 000 000 000 de transactions                    
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

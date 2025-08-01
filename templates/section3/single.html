@@ -1,0 +1,850 @@
+{% extends "section3/base.html" %}
+
+{% block styles %}
+<style>
+    .dashboard {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .input-group {
+        margin-bottom: 1rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    input[type="date"], select {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+    }
+
+    button {
+        background: var(--secondary);
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    button:hover {
+        background: var(--primary);
+    }
+
+    .visualization-container {
+        width: 100%;
+        height: 80vh;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+        position: relative;
+    }
+
+    .visualization-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .stats-panel {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .stats-panel h2 {
+        margin-top: 0;
+        color: var(--primary);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .stat-label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        color: var(--secondary);
+    }
+
+    .hour-select-container {
+        position: relative;
+    }
+
+    .loading-spinner {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0,0,0,0.1);
+        border-radius: 50%;
+        border-top-color: var(--secondary);
+        animation: spin 1s ease-in-out infinite;
+        display: none;
+    }
+
+    @keyframes spin {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--secondary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .search-container input {
+        flex: 1;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 0.5rem;
+    }
+    
+    .view-toggle {
+        display: flex;
+        background: #f0f0f0;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .view-toggle button {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 0.8rem;
+        cursor: pointer;
+        color: #666;
+    }
+    
+    .view-toggle button.active {
+        background: var(--secondary);
+        color: white;
+    }
+    
+    .table-container {
+        margin: 2rem 0;
+        overflow-x: auto;
+    }
+    
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .transactions-table th, 
+    .transactions-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .transactions-table th {
+        background-color: #f8f9fa;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .transactions-table tr:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .node-legend {
+        display: flex;
+        gap: 1rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        background: #f8f9fa;
+    }
+    
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .community-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .community-stat {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .community-stat h4 {
+        margin-top: 0;
+        color: var(--primary);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+    
+    .error-box {
+        background: #ffeeee;
+        color: #e74c3c;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border: 1px solid #ffd1d1;
+    }
+
+    .community-highlight {
+        border: 2px solid #FF33F5 !important;
+        box-shadow: 0 0 10px rgba(255, 51, 245, 0.5);
+    }
+
+    .search-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .table-search {
+        width: 300px;
+        padding: 0.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 0.5rem;
+    }
+
+    #advanced-search-modal {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+
+    .intro-paragraph {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.8rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .intro-paragraph p {
+        margin: 0 0 1rem 0;
+    }
+
+    .intro-paragraph ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .intro-paragraph li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Single Time Analysis</h1>
+    
+    <div class="intro-paragraph">
+        <p>This tool allows you to analyze Bitcoin transaction networks at specific time points. You can explore the network structure, identify key participants, and examine transaction patterns for any selected hour.</p>
+        
+        <p>Key features include:</p>
+        <ul>
+            <li><strong>Interactive Network Visualization:</strong> Explore the transaction network with an interactive force-directed graph where node size reflects transaction volume and edge thickness shows value.</li>
+            <li><strong>Detailed Statistics:</strong> View comprehensive metrics including total nodes, transactions, and value flows with both satoshi and USD equivalents.</li>
+            <li><strong>Top Participants:</strong> Identify the most active nodes in the network - the top spenders, receivers, and those that are both.</li>
+            <li><strong>Community Detection:</strong> Automatically detect and analyze transaction communities to understand how the network clusters.</li>
+            <li><strong>Advanced Search:</strong> Search for specific nodes or communities and examine their transaction patterns in detail.</li>
+        </ul>
+        
+        <p>To begin, select a date and hour from the dropdown menus below. The visualization will automatically update to show the top transactions during that time period.</p>
+    </div>
+    
+    <form method="POST" id="analysis-form">
+        <div class="controls">
+            <div class="input-group">
+                <label for="date">Select Date</label>
+                <input type="date" id="date" name="date" 
+                       min="{{ min_date }}" 
+                       max="{{ max_date }}"
+                       value="{{ selected_date }}"
+                       required>
+            </div>
+            
+            <div class="input-group hour-select-container">
+                <label for="hour">Select Hour</label>
+                <select id="hour" name="hour" required {% if not selected_date %}disabled{% endif %}>
+                    {% if not selected_date %}
+                        <option value="" disabled selected>Select date first</option>
+                    {% else %}
+                        <option value="" disabled>Loading hours...</option>
+                        {% for h in available_hours %}
+                            <option value="{{ h }}" {% if h == selected_hour|int %}selected{% endif %}>
+                                {{ "%02d"|format(h) }}:00
+                            </option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+                <div class="loading-spinner" id="hour-loading-spinner"></div>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" name="search" placeholder="Search node or community (e.g., c1)..." 
+                   value="{{ search_query }}">
+            <div class="view-toggle">
+                <button type="button" class="{{ 'active' if not community_view }}" 
+                        onclick="setViewMode(false)">Normal View</button>
+                <button type="button" class="{{ 'active' if community_view }}" 
+                        onclick="setViewMode(true)">Community View</button>
+            </div>
+            <input type="hidden" name="community_view" id="community_view" 
+                   value="{{ 'true' if community_view else 'false' }}">
+        </div>
+        
+        <button type="submit" id="submit-btn">Analyze Network</button>
+    </form>
+
+    {% if error %}
+    <div class="error-box">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="node-legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #FF5733;"></div>
+            <span>Top Spenders</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #33FF57;"></div>
+            <span>Top Receivers</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #3357FF;"></div>
+            <span>Top Spenders & Receivers</span>
+        </div>
+        {% if community_view %}
+        <div class="legend-item">
+            <div class="legend-color" style="background: #8884d8;"></div>
+            <span>Community Nodes</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if network_file %}
+    <div class="visualization-container">
+        <iframe src="{{ url_for('serve_network', filename=network_file) }}" id="network-iframe"></iframe>
+    </div>
+    {% endif %}
+
+    {% if hour_stats or graph_stats %}
+    <div class="stats-container">
+        {% if hour_stats %}
+        <div class="stats-panel">
+            <h2>Network Statistics</h2>
+            
+            <div class="stat-row">
+                <span class="stat-label">Total Nodes:</span>
+                <span class="stat-value">{{ hour_stats.total_nodes|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Total Transactions:</span>
+                <span class="stat-value">{{ hour_stats.total_transactions|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Total Value (SAT):</span>
+                <span class="stat-value">{{ hour_stats.total_satoshi|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Average Value (SAT):</span>
+                <span class="stat-value">{{ hour_stats.avg_satoshi|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Average Value (USD):</span>
+                <span class="stat-value">{{ hour_stats.avg_usd|format_usd }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if graph_stats %}
+        <div class="stats-panel">
+            <h2>Visualized Subset</h2>
+            
+            <div class="stat-row">
+                <span class="stat-label">Shown Nodes:</span>
+                <span class="stat-value">{{ graph_stats.shown_nodes|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Shown Transactions:</span>
+                <span class="stat-value">{{ graph_stats.shown_transactions|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Percentage of Total:</span>
+                <span class="stat-value">{{ "%.2f"|format(graph_stats.pct_transactions) }}%</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Max Transaction (SAT):</span>
+                <span class="stat-value">{{ graph_stats.max_satoshi|format_satoshi }}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">Min Transaction (SAT):</span>
+                <span class="stat-value">{{ graph_stats.min_satoshi|format_satoshi }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if spenders or receivers %}
+    <div class="stats-container">
+        {% if spenders %}
+        <div class="stats-panel">
+            <h2>Top Spenders</h2>
+            {% for spender in spenders %}
+            <div class="stat-row">
+                <span class="stat-label">Node {{ spender.SRC_ID }}:</span>
+                <span class="stat-value">{{ spender.total_spent|format_satoshi }} SAT</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if receivers %}
+        <div class="stats-panel">
+            <h2>Top Receivers</h2>
+            {% for receiver in receivers %}
+            <div class="stat-row">
+                <span class="stat-label">Node {{ receiver.DST_ID }}:</span>
+                <span class="stat-value">{{ receiver.total_received|format_satoshi }} SAT</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if community_view and top_comm_spenders and top_comm_receivers %}
+    <div class="community-stats">
+        <div class="community-stat">
+            <h4>Top Spending Communities</h4>
+            {% for comm, amount in top_comm_spenders.items() %}
+            <div class="stat-row">
+                <span class="stat-label">{{ comm }}:</span>
+                <span class="stat-value">{{ amount|format_satoshi }} SAT</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="community-stat">
+            <h4>Top Receiving Communities</h4>
+            {% for comm, amount in top_comm_receivers.items() %}
+            <div class="stat-row">
+                <span class="stat-label">{{ comm }}:</span>
+                <span class="stat-value">{{ amount|format_satoshi }} SAT</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if node_transactions %}
+    <div class="table-container">
+        <div class="search-results-header">
+            <h3>Node Transactions</h3>
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" class="table-search" placeholder="Search transactions..." id="transactions-filter">
+                <button type="button" id="advanced-search-btn" style="padding: 0.5rem 1rem;">Advanced Search</button>
+            </div>
+        </div>
+        
+        <div id="advanced-search-modal" style="display: none;">
+            <h4>Advanced Search</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div class="input-group">
+                    <label for="search_type">Search Type:</label>
+                    <select id="search_type" name="search_type">
+                        <option value="node-to-node">Node to Node</option>
+                        <option value="node-to-comm">Node to Community</option>
+                        <option value="comm-to-node">Community to Node</option>
+                        <option value="node-to-all">Node to All</option>
+                        <option value="comm-to-all">Community to All</option>
+                    </select>
+                </div>
+                
+                <div id="from_node_group" class="input-group">
+                    <label for="from_node">From Node:</label>
+                    <input type="text" id="from_node" name="from_node" placeholder="Enter source node ID">
+                </div>
+                
+                <div id="to_node_group" class="input-group">
+                    <label for="to_node">To Node:</label>
+                    <input type="text" id="to_node" name="to_node" placeholder="Enter destination node ID">
+                </div>
+                
+                <div id="from_comm_group" class="input-group" style="display: none;">
+                    <label for="from_comm">From Community:</label>
+                    <select id="from_comm" name="from_comm">
+                        {% if communities %}
+                            {% for comm in communities.values()|unique %}
+                                <option value="{{ comm }}">{{ comm }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                
+                <div id="to_comm_group" class="input-group" style="display: none;">
+                    <label for="to_comm">To Community:</label>
+                    <select id="to_comm" name="to_comm">
+                        {% if communities %}
+                            {% for comm in communities.values()|unique %}
+                                <option value="{{ comm }}">{{ comm }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" id="cancel-search-btn" style="background: #f0f0f0; color: #333;">Cancel</button>
+                <button type="button" id="perform-search-btn">Search</button>
+            </div>
+        </div>
+
+        <table class="transactions-table" id="transactions-table">
+            <thead>
+                <tr>
+                    <th>From Node (Community)</th>
+                    <th>To Node (Community)</th>
+                    <th>Value (SAT)</th>
+                    <th>Value (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in node_transactions %}
+                <tr>
+                    <td>{{ tx.src }} ({{ tx.src_comm }})</td>
+                    <td>{{ tx.dst }} ({{ tx.dst_comm }})</td>
+                    <td>{{ tx.satoshi|format_satoshi }}</td>
+                    <td>{{ tx.usd|format_usd }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+</div>
+
+<script>
+function setViewMode(isCommunity) {
+    document.getElementById('community_view').value = isCommunity;
+    const searchInput = document.querySelector('input[name="search"]');
+    if (isCommunity && searchInput.value && !searchInput.value.startsWith('c')) {
+        searchInput.value = ''; // Clear non-community searches when switching to community view
+    }
+    document.getElementById('analysis-form').submit();
+}
+
+document.getElementById('date').addEventListener('change', async function() {
+    const date = this.value;
+    const hourSelect = document.getElementById('hour');
+    const spinner = document.getElementById('hour-loading-spinner');
+    
+    if (!date) {
+        hourSelect.innerHTML = '<option value="" disabled selected>Select date first</option>';
+        hourSelect.disabled = true;
+        return;
+    }
+
+    hourSelect.innerHTML = '<option value="" disabled>Loading hours...</option>';
+    hourSelect.disabled = true;
+    spinner.style.display = 'block';
+
+    try {
+        const response = await fetch(`/get-hours/${date}`);
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const data = await response.json();
+        
+        if (data.available_hours && data.available_hours.length > 0) {
+            hourSelect.innerHTML = `
+                <option value="" disabled selected>Select hour</option>
+                ${data.available_hours.map(h => 
+                    `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`
+                ).join('')}
+            `;
+            hourSelect.disabled = false;
+        } else {
+            hourSelect.innerHTML = '<option value="" disabled>No data available</option>';
+        }
+        
+    } catch (error) {
+        hourSelect.innerHTML = '<option value="" disabled>Error loading hours</option>';
+        console.error('Error loading hours:', error);
+    } finally {
+        spinner.style.display = 'none';
+    }
+});
+
+document.getElementById('analysis-form')?.addEventListener('submit', function() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+});
+
+// Simple table filtering
+document.getElementById('transactions-filter').addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#transactions-table tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+// Advanced search functionality
+document.getElementById('advanced-search-btn').addEventListener('click', function() {
+    document.getElementById('advanced-search-modal').style.display = 'block';
+});
+
+document.getElementById('cancel-search-btn').addEventListener('click', function() {
+    document.getElementById('advanced-search-modal').style.display = 'none';
+});
+
+document.getElementById('search_type').addEventListener('change', function() {
+    const searchType = this.value;
+    
+    // Hide all groups first
+    document.getElementById('from_node_group').style.display = 'none';
+    document.getElementById('to_node_group').style.display = 'none';
+    document.getElementById('from_comm_group').style.display = 'none';
+    document.getElementById('to_comm_group').style.display = 'none';
+    
+    // Show relevant groups based on search type
+    if (searchType === 'node-to-node') {
+        document.getElementById('from_node_group').style.display = 'block';
+        document.getElementById('to_node_group').style.display = 'block';
+    } 
+    else if (searchType === 'node-to-comm') {
+        document.getElementById('from_node_group').style.display = 'block';
+        document.getElementById('to_comm_group').style.display = 'block';
+    }
+    else if (searchType === 'comm-to-node') {
+        document.getElementById('from_comm_group').style.display = 'block';
+        document.getElementById('to_node_group').style.display = 'block';
+    }
+    else if (searchType === 'node-to-all') {
+        document.getElementById('from_node_group').style.display = 'block';
+    }
+    else if (searchType === 'comm-to-all') {
+        document.getElementById('from_comm_group').style.display = 'block';
+    }
+});
+
+document.getElementById('perform-search-btn').addEventListener('click', async function() {
+    const date = document.getElementById('date').value;
+    const hour = document.getElementById('hour').value;
+    const searchType = document.getElementById('search_type').value;
+    
+    if (!date || !hour) {
+        alert('Please select both date and hour first');
+        return;
+    }
+    
+    const searchData = {
+        date: date,
+        hour: hour,
+        search_type: searchType
+    };
+    
+    // Add relevant fields based on search type
+    if (searchType === 'node-to-node') {
+        searchData.from_node = document.getElementById('from_node').value;
+        searchData.to_node = document.getElementById('to_node').value;
+        if (!searchData.from_node || !searchData.to_node) {
+            alert('Please enter both source and destination nodes');
+            return;
+        }
+    } 
+    else if (searchType === 'node-to-comm') {
+        searchData.from_node = document.getElementById('from_node').value;
+        searchData.to_comm = document.getElementById('to_comm').value;
+        if (!searchData.from_node) {
+            alert('Please enter a source node');
+            return;
+        }
+    }
+    else if (searchType === 'comm-to-node') {
+        searchData.from_comm = document.getElementById('from_comm').value;
+        searchData.to_node = document.getElementById('to_node').value;
+        if (!searchData.to_node) {
+            alert('Please enter a destination node');
+            return;
+        }
+    }
+    else if (searchType === 'node-to-all') {
+        searchData.from_node = document.getElementById('from_node').value;
+        if (!searchData.from_node) {
+            alert('Please enter a source node');
+            return;
+        }
+    }
+    else if (searchType === 'comm-to-all') {
+        searchData.from_comm = document.getElementById('from_comm').value;
+    }
+    
+    try {
+        const response = await fetch('/search-transactions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(searchData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        
+        // Update the table with results
+        const tbody = document.querySelector('#transactions-table tbody');
+        tbody.innerHTML = '';
+        
+        if (data.results && data.results.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No transactions found</td></tr>';
+        } else if (data.results) {
+            data.results.forEach(tx => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tx.src} (${tx.src_comm || ''})</td>
+                    <td>${tx.dst} (${tx.dst_comm || ''})</td>
+                    <td>${parseInt(tx.satoshi).toLocaleString()}</td>
+                    <td>$${parseFloat(tx.usd).toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Close the modal
+        document.getElementById('advanced-search-modal').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while searching');
+    }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    {% if selected_date %}
+    document.getElementById('date').value = '{{ selected_date }}';
+    {% endif %}
+    
+    {% if selected_hour %}
+    const date = document.getElementById('date').value;
+    if (date) {
+        fetch(`/get-hours/${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const hourSelect = document.getElementById('hour');
+                hourSelect.innerHTML = `
+                    <option value="" disabled selected>Select hour</option>
+                    ${data.available_hours.map(h => 
+                        `<option value="${h}" ${h == {{ selected_hour|int }} ? 'selected' : ''}>
+                            ${String(h).padStart(2, '0')}:00
+                        </option>`
+                    ).join('')}
+                `;
+                hourSelect.disabled = false;
+            });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

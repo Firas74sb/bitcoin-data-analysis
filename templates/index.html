@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- Icon -->
+        <link rel="icon" href="{{ url_for('static', filename='assets/icons/favicon.ico') }}" type="image/x-icon">
+
+        <!-- Styles -->
+        {% block styles %}
+        <link rel="stylesheet" href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css""/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        {% endblock %}
+        
+        <!-- Scripts -->
+        {% block scripts %}
+        <script src="https://unpkg.com/apexcharts"></script>
+        <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+        <script type="module" src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+        {% endblock %}
+
+        <!-- Titre de la fenêtre -->
+        {% block title %}
+        <title>ProjetKafka</title>
+        {% endblock %}
+    </head>
+
+    <body>
+        
+        {% block nav %}
+        <!-- Barre de navigation -->
+        <nav>
+            <div class="logo">
+                <a href="/">Accueil</a>
+            </div>
+            <div class="nav-links">
+                <a href="/section2">Section 2</a>
+                <a href="/section3">Section 3</a>
+            </div>
+        </nav>
+        {% endblock %}
+
+        {% block content %}
+        {% endblock %}
+          
+    </body>
+</html>

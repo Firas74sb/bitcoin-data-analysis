@@ -1,0 +1,11 @@
+# Données volumineuses
+*.csv
+*.parquet
+*.tar.gz
+
+#Dossier inutiles
+.venv/
+.vscode
+
+# Fichiers inutiles
+*Zone.Identifier

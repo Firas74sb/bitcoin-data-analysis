@@ -1,0 +1,93 @@
+{% extends "section3/base.html" %}
+
+{% block content %}
+<div class="welcome">
+    <h1>Analyse du Réseau Bitcoin</h1>
+    
+    <div class="intro">
+        <p>Ce outil de visualisation interactif vous permet d'explorer les réseaux de transactions Bitcoin à différents points temporels. 
+        Vous pouvez analyser la structure du réseau, identifier les participants clés et suivre les flux de transactions. L'outil propose deux modes principaux :</p>
+        <ul>
+            <li><strong>Analyse à un Moment Donné :</strong> Examinez la structure du réseau, les communautés et les nœuds clés pour une heure spécifique</li>
+            <li><strong>Analyse Comparative :</strong> Comparez les états du réseau entre deux points temporels différents pour identifier les changements</li>
+        </ul>
+        <p>Les fonctionnalités incluent la détection de communautés, l'identification des principaux dépensiers/récepteurs, l'analyse de la valeur des transactions et l'exploration interactive du réseau.</p>
+    </div>
+    
+    <p>Sélectionnez un mode d'analyse pour commencer :</p>
+    
+    <div class="mode-select">
+        <a href="{{ url_for('single_view') }}" class="mode-card">
+            <h2>Analyse à un Moment Donné</h2>
+            <p>Analysez le réseau pour une date et une heure spécifiques</p>
+        </a>
+        <a href="{{ url_for('compare_view') }}" class="mode-card">
+            <h2>Analyse Comparative</h2>
+            <p>Comparez les états du réseau entre deux points temporels</p>
+        </a>
+    </div>
+</div>
+
+<style>
+    .welcome {
+        text-align: center;
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .intro {
+        text-align: left;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+    }
+
+    .intro p {
+        margin-bottom: 1rem;
+    }
+
+    .intro ul {
+        text-align: left;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .intro li {
+        margin-bottom: 0.5rem;
+    }
+
+    .mode-select {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .mode-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--primary);
+    }
+
+    .mode-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .mode-card h2 {
+        color: var(--secondary);
+        margin-top: 0;
+    }
+
+    .mode-card p {
+        color: #7f8c8d;
+    }
+</style>
+{% endblock %}

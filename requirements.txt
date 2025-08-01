@@ -1,0 +1,10 @@
+# Web and parquet
+flask
+pyspark
+
+
+# Section Ahmed
+polars-lts-cpu
+networkx
+pyvis
+python-louvain
